@@ -1,0 +1,96 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 20px;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+svg {
+    display: block;
+    margin: auto;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 100%;
+    height: auto;
+}
+
+.neighborhood {
+    stroke: #ccc;
+    stroke-width: 0.5px;
+    fill: #f8f9fa; /* Default fill for 0 crimes - make it light */
+    transition: fill 0.15s ease-in-out, stroke-width 0.15s ease-in-out, filter 0.15s ease-in-out;
+}
+
+.neighborhood:hover {
+    stroke: #333;
+    stroke-width: 1.5px;
+    cursor: pointer;
+}
+
+.knn-link {
+    stroke: rgba(108, 117, 125, 0.4); /* Even softer grey */
+    stroke-width: 0.8px;
+    fill: none;
+    pointer-events: none;
+}
+
+.centroid {
+    fill: rgba(220, 53, 69, 0.7);
+    stroke: rgba(255, 255, 255, 0.7);
+    stroke-width: 0.5px;
+    pointer-events: none;
+}
+
+.tooltip {
+    position: absolute;
+    text-align: left;
+    width: auto;
+    height: auto;
+    padding: 8px 12px;
+    font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: rgba(50, 50, 50, 0.9);
+    color: #fff;
+    border: 0px;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    white-space: nowrap;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    transition: opacity 0.2s ease-in-out;
+    z-index: 1000;
+}
+
+.legend {
+    font-size: 11px;
+}
+
+.legend-background {
+    fill: rgba(255, 255, 255, 0.9);
+    stroke: #dee2e6;
+    stroke-width: 1px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.legend-label {
+    fill: #444;
+    font-size: 10px;
+}
+
+.legend-title {
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    fill: #333;
+    font-size: 11px;
+} 

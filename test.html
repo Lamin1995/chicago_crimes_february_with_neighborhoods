@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicago Crime Map Component Tests</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            padding: 20px;
+        }
+        .test-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #444;
+        }
+        .test-button {
+            background-color: #0275d8;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .test-results {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Component Tests</h1>
+    
+    <div class="test-container">
+        <h2>Data Loading Test</h2>
+        <button id="test-data-load" class="test-button">Test Data Loading</button>
+        <div id="data-load-results" class="test-results">Results will appear here...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Centroid Calculation Test</h2>
+        <button id="test-centroids" class="test-button">Test Centroid Calculation</button>
+        <div id="centroid-results" class="test-results">Results will appear here...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>KNN Algorithm Test</h2>
+        <button id="test-knn" class="test-button">Test KNN Algorithm</button>
+        <div id="knn-results" class="test-results">Results will appear here...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Color Scale Test</h2>
+        <button id="test-colors" class="test-button">Test Color Scale</button>
+        <div id="color-results" class="test-results">Results will appear here...</div>
+        <div id="color-samples" style="margin-top: 10px; display: flex;"></div>
+    </div>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+    <script>
+        // Test configuration
+        const TEST_CONFIG = {
+            files: {
+                neighborhoods: "neighborhoods.geojson",
+                crimes: "crimes_february_with_neighborhoods.geojson"
+            },
+            fields: {
+                neighborhoodName: "PRI_NEIGH",
+            },
+            knn: { k: 5 },
+            visual: {
+                colorScheme: d3.schemeOrRd[5],
+                breakpoints: [0.15, 0.35, 0.6, 1]
+            }
+        };
+        
+        // Test data loading
+        document.getElementById('test-data-load').addEventListener('click', async () => {
+            const resultsEl = document.getElementById('data-load-results');
+            resultsEl.textContent = "Loading data...";
+            
+            try {
+                const [neighborhoodData, crimeData] = await Promise.all([
+                    d3.json(TEST_CONFIG.files.neighborhoods),
+                    d3.json(TEST_CONFIG.files.crimes)
+                ]);
+                
+                resultsEl.textContent = `
+                    Data loaded successfully!
+                    Neighborhoods: ${neighborhoodData.features.length} features
+                    Crimes: ${crimeData.features.length} features
+                `;
+            } catch (error) {
+                resultsEl.textContent = `Error loading data: ${error.message}`;
+            }
+        });
+        
+        // Test centroid calculation
+        document.getElementById('test-centroids').addEventListener('click', async () => {
+            const resultsEl = document.getElementById('centroid-results');
+            resultsEl.textContent = "Calculating centroids...";
+            
+            try {
+                const neighborhoodData = await d3.json(TEST_CONFIG.files.neighborhoods);
+                const projection = d3.geoMercator().fitSize([500, 500], neighborhoodData);
+                const pathGenerator = d3.geoPath().projection(projection);
+                
+                // Filter valid neighborhoods and calculate centroids
+                const validNeighborhoods = neighborhoodData.features.filter(
+                    f => f.properties[TEST_CONFIG.fields.neighborhoodName]
+                );
+                
+                const centroids = validNeighborhoods
+                    .map(feature => {
+                        const centroid = pathGenerator.centroid(feature);
+                        return {
+                            name: feature.properties[TEST_CONFIG.fields.neighborhoodName],
+                            coords: centroid
+                        };
+                    })
+                    .filter(d => !isNaN(d.coords[0]) && !isNaN(d.coords[1]));
+                
+                resultsEl.textContent = `
+                    Calculated ${centroids.length} valid centroids from ${validNeighborhoods.length} neighborhoods
+                    First centroid: ${centroids[0].name} at [${centroids[0].coords.join(', ')}]
+                `;
+            } catch (error) {
+                resultsEl.textContent = `Error calculating centroids: ${error.message}`;
+            }
+        });
+        
+        // Test KNN algorithm
+        document.getElementById('test-knn').addEventListener('click', async () => {
+            const resultsEl = document.getElementById('knn-results');
+            resultsEl.textContent = "Calculating KNN...";
+            
+            try {
+                const neighborhoodData = await d3.json(TEST_CONFIG.files.neighborhoods);
+                const projection = d3.geoMercator().fitSize([500, 500], neighborhoodData);
+                const pathGenerator = d3.geoPath().projection(projection);
+                
+                // Calculate centroids
+                const centroids = neighborhoodData.features
+                    .filter(f => f.properties[TEST_CONFIG.fields.neighborhoodName])
+                    .map(feature => {
+                        const centroid = pathGenerator.centroid(feature);
+                        return {
+                            name: feature.properties[TEST_CONFIG.fields.neighborhoodName],
+                            coords: centroid
+                        };
+                    })
+                    .filter(d => !isNaN(d.coords[0]) && !isNaN(d.coords[1]));
+                
+                // Calculate KNN
+                const distance = (p1, p2) => 
+                    Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
+                
+                const knnLinks = [];
+                centroids.forEach((center1, i) => {
+                    const distances = centroids
+                        .map((center2, j) => ({
+                            index: j,
+                            dist: i === j ? Infinity : distance(center1.coords, center2.coords)
+                        }))
+                        .sort((a, b) => a.dist - b.dist);
+                    
+                    // Take top K neighbors
+                    for (let k = 0; k < TEST_CONFIG.knn.k && k < distances.length; k++) {
+                        const neighbor = centroids[distances[k].index];
+                        
+                        // Avoid duplicate links
+                        const exists = knnLinks.some(link =>
+                            (link.source === center1 && link.target === neighbor) ||
+                            (link.source === neighbor && link.target === center1)
+                        );
+                        
+                        if (!exists) {
+                            knnLinks.push({ source: center1, target: neighbor });
+                        }
+                    }
+                });
+                
+                resultsEl.textContent = `
+                    Calculated ${knnLinks.length} KNN links (k=${TEST_CONFIG.knn.k})
+                    First link: ${knnLinks[0].source.name} to ${knnLinks[0].target.name}
+                `;
+            } catch (error) {
+                resultsEl.textContent = `Error calculating KNN: ${error.message}`;
+            }
+        });
+        
+        // Test color scale
+        document.getElementById('test-colors').addEventListener('click', async () => {
+            const resultsEl = document.getElementById('color-results');
+            const samplesEl = document.getElementById('color-samples');
+            resultsEl.textContent = "Testing color scale...";
+            samplesEl.innerHTML = '';
+            
+            try {
+                const crimeData = await d3.json(TEST_CONFIG.files.crimes);
+                const neighborhoodData = await d3.json(TEST_CONFIG.files.neighborhoods);
+                
+                // Calculate crime counts
+                const crimeCounts = {};
+                neighborhoodData.features
+                    .filter(f => f.properties[TEST_CONFIG.fields.neighborhoodName])
+                    .forEach(feature => {
+                        crimeCounts[feature.properties[TEST_CONFIG.fields.neighborhoodName]] = 0;
+                    });
+                
+                crimeData.features.forEach(crime => {
+                    const name = crime.properties[TEST_CONFIG.fields.neighborhoodName];
+                    if (name && crimeCounts.hasOwnProperty(name)) {
+                        crimeCounts[name]++;
+                    }
+                });
+                
+                // Create color scale
+                const allCounts = Object.values(crimeCounts);
+                const maxCount = d3.max(allCounts) || 1;
+                
+                // Create breaks
+                const breaks = [1];
+                TEST_CONFIG.visual.breakpoints.forEach(bp => {
+                    breaks.push(Math.ceil(maxCount * bp));
+                });
+                breaks.push(maxCount);
+                
+                // Create color scale
+                const colorScale = d3.scaleThreshold()
+                    .domain(breaks.slice(1, -1))
+                    .range(TEST_CONFIG.visual.colorScheme);
+                
+                // Display results
+                resultsEl.textContent = `
+                    Color scale created with ${TEST_CONFIG.visual.colorScheme.length} colors
+                    Max crime count: ${maxCount}
+                    Breaks: ${breaks.join(', ')}
+                `;
+                
+                // Show color samples
+                TEST_CONFIG.visual.colorScheme.forEach((color, i) => {
+                    const sampleDiv = document.createElement('div');
+                    sampleDiv.style.width = '40px';
+                    sampleDiv.style.height = '40px';
+                    sampleDiv.style.backgroundColor = color;
+                    sampleDiv.style.display = 'flex';
+                    sampleDiv.style.alignItems = 'center';
+                    sampleDiv.style.justifyContent = 'center';
+                    sampleDiv.style.color = i > 2 ? 'white' : 'black';
+                    sampleDiv.style.fontWeight = 'bold';
+                    sampleDiv.textContent = i + 1;
+                    samplesEl.appendChild(sampleDiv);
+                });
+            } catch (error) {
+                resultsEl.textContent = `Error testing color scale: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html> 
