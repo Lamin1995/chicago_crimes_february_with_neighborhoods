@@ -1,59 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chicago Crime Map & Neighborhood Graph</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-      body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        margin: 0;
-      }
-      p { 
-        font-size: 16px;
-        line-height: 2.0;
-        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-
-      }
-
-      header {
-        background-color: #f0f0f0; /* Example background color */
-        padding: 1em;
-        text-align: center;
-      }
-
-      main {
-        flex-grow: 1;
-      }
-
-      footer {
-        background-color: #333; /* Example background color */
-        color: white;
-        padding: 1em;
-        text-align: center;
-      }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicago Crime Map & Neighborhood Graph</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center; /* Center elements horizontally by default */
+        }
+        header, footer {
+            padding: 1em 0;
+            /* No background color is set, so it will be transparent */
+        }
+        main {
+            flex-grow: 1;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.8;
+            font-weight: bold;
+            font-family: Roboto;
+            
+        }
+        h3{
+            line-height: 0.4;
+            font-family: roboto;
+        }
+    </style>
 </head>
 <body>
-    <header>
-      <p>Lamin Malcolm Turay.<br>
-
+    <header>
+        <p>Name: Lamin Malcolm Turay <br>
         G-Number: G02550757<br>
-    </p>
-    </header>
-    <main>
-      <h3>Chicago Crime Visualization (Feb 2025 Subset)</h3>
-      <div id="tooltip" class="tooltip" style="opacity:0;"></div>
-      <svg id="map"></svg>
-
-      <script src="https://d3js.org/d3.v7.min.js"></script>
-      <script src="https://unpkg.com/topojson-client@3"></script>       <script src="script.js"></script>
-    </main>
-    <footer>
-      <p>&copy;- 2025 All Rights Reserved- Lamin Malcolm Turay</p>
-    </footer>
+        </p1>  </header>
+    <main>
+        <h3>Chicago Crime Visualization (Feb 2025 Subset)</h3>
+        <div id="tooltip" class="tooltip" style="opacity:0;"></div>
+        <svg id="map"></svg>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script src="https://unpkg.com/topojson-client@3"></script>
+        <script src="script.js"></script>
+    </main>
+    <footer>
+        <p>&copy; 2025-All Rights Reserved- Lamin Malcolm Turay</p> </footer>
 </body>
 </html>
+
+
